@@ -1,0 +1,57 @@
+package main 
+
+import (
+	"net/http"
+	"log"
+	"encoding/json"
+	"time"
+	"github.com/google/uuid"
+	"github.com/arunima1319/chirpy/internal/database"
+)
+
+type chirp struct{ 
+	ID uuid.UUID `json:"id"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+	Body string `json:"body"`
+	UserID uuid.UUID `json:"user_id"`
+
+}
+
+func (cfg *apiConfig) handlerChirps (w http.ResponseWriter, r *http.Request){ 
+
+	chirped := chirp{}
+
+	decoder := json.NewDecoder(r.Body)
+	err := decoder.Decode(&chirped)
+	if err!= nil{ 
+		log.Printf("Error in decoding JSON: %s", err)
+		w.WriteHeader(500)
+		return
+	}
+
+	if len(chirped.Body) > 140{ 
+		respondWithError(w, 400, "Chirp is too long")
+		return
+	}
+
+	cleanedText := replaceBadWord(chirped.Body)
+	chirped.Body = cleanedText
+
+	chirpResource, err := cfg.dbQueries.CreateChirp(
+		r.Context(),
+		database.CreateChirpParams{
+			Body: cleanedText,
+			UserID: chirped.UserID, 
+		})
+	if err!=nil{
+		log.Printf("Error in storing chirp to database: %s", err)
+		return
+	}
+
+	chirped.ID = chirpResource.ID
+	chirped.CreatedAt = chirpResource.CreatedAt
+	chirped.UpdatedAt = chirpResource.UpdatedAt
+
+	respondWithJSON(w, 201, chirped)
+}
