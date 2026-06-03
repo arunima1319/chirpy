@@ -14,8 +14,8 @@ const createUser = `-- name: CreateUser :one
 INSERT INTO users(id, created_at, updated_at, email)
 VALUES(
     GEN_RANDOM_UUID(), 
-    TIMESTAMP.NOW(), 
-    TIMESTAMP.NOW(), 
+    NOW(), 
+    NOW(), 
     $1
 )
 RETURNING id, created_at, updated_at, email
