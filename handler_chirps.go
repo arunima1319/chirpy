@@ -18,6 +18,31 @@ type chirp struct{
 
 }
 
+func (cfg *apiConfig) handlerGetChirps (w http.ResponseWriter, r *http.Request){
+	chirpSlice, err := cfg.dbQueries.GetAllChirps(r.Context())
+	if err!=nil{
+		log.Printf("Error in getting chirps: %s", err)
+	} 
+
+
+
+	chirpList := []chirp{}
+
+	for _, singleChirp := range chirpSlice{
+		chirpJSON := chirp{
+			ID: singleChirp.ID,
+			CreatedAt: singleChirp.CreatedAt, 
+			UpdatedAt: singleChirp.UpdatedAt, 
+			Body: singleChirp.Body,
+			UserID: singleChirp.UserID,
+		}
+		
+		chirpList = append(chirpList, chirpJSON)
+	}
+
+	respondWithJSON(w, 200, chirpList)
+}
+
 func (cfg *apiConfig) handlerChirps (w http.ResponseWriter, r *http.Request){ 
 
 	chirped := chirp{}
@@ -29,7 +54,6 @@ func (cfg *apiConfig) handlerChirps (w http.ResponseWriter, r *http.Request){
 		w.WriteHeader(500)
 		return
 	}
-
 	if len(chirped.Body) > 140{ 
 		respondWithError(w, 400, "Chirp is too long")
 		return
