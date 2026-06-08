@@ -43,6 +43,29 @@ func (cfg *apiConfig) handlerGetChirps (w http.ResponseWriter, r *http.Request){
 	respondWithJSON(w, 200, chirpList)
 }
 
+func (cfg *apiConfig) handlerGetOneChirp (w http.ResponseWriter, r *http.Request){
+	uuidID, err := uuid.Parse(r.PathValue("chirpID"))
+	if err!= nil{
+		log.Printf("error in parsing the ID string: %s", err)
+	}
+	chirpDatabase, err := cfg.dbQueries.GetOneChirp(r.Context(), uuidID)
+	if err!=nil{
+		log.Printf("error in getting the chirp from database: %s", err)
+		respondWithError(w, 404, "Resource not found")
+		return
+	}
+
+	chirpJSON := chirp{
+		ID: chirpDatabase.ID, 
+		CreatedAt: chirpDatabase.CreatedAt, 
+		UpdatedAt: chirpDatabase.UpdatedAt, 
+		Body: chirpDatabase.Body, 
+		UserID: chirpDatabase.UserID,
+	}
+
+	respondWithJSON(w, 200, chirpJSON)
+}
+
 func (cfg *apiConfig) handlerChirps (w http.ResponseWriter, r *http.Request){ 
 
 	chirped := chirp{}

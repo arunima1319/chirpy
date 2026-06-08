@@ -6,11 +6,14 @@ import (
 	"log"
 	"github.com/google/uuid"
 	"time"
+	"github.com/arunima1319/chirpy/internal/auth"
+	"github.com/arunima1319/chirpy/internal/database"
 )
 
 
-type email struct{
+type userBody struct{
 	Email string `json:"email"`
+	Password string `json:"password"`
 }
 
 type User struct{
@@ -18,20 +21,30 @@ type User struct{
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 	Email string `json:"email"`
-
+	HashedPassword string `json:"hashed_password"`
 }
 
 func (cfg *apiConfig) handlerCreateUser (w http.ResponseWriter, r *http.Request){ 
 
-	emailAddress := email{}
+	reqBody := userBody{}
 	decoder := json.NewDecoder(r.Body)
-	err := decoder.Decode(&emailAddress)
+	err := decoder.Decode(&reqBody)
 	if err!=nil{
 		log.Printf("Error in decoding request: %s", err)
 		return
 	}
 
-	user, err := cfg.dbQueries.CreateUser(r.Context(), emailAddress.Email)
+	hashedPassword, err := auth.HashPassword(reqBody.Password)
+	if err != nil{
+		log.Printf("Error in hashing password: %s", err)
+	}
+
+	user, err := cfg.dbQueries.CreateUser(
+		r.Context(), 
+		database.CreateUserParams{
+			Email: reqBody.Email,
+			HashedPassword: hashedPassword,
+		})
 	if err!= nil{
 		log.Printf("Error in creating user: %s", err)
 		return
