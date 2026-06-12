@@ -18,6 +18,47 @@ type chirp struct{
 	UserID uuid.UUID `json:"user_id"`
 }
 
+func (cfg *apiConfig) handlerDeleteChirp (w http.ResponseWriter, r *http.Request){
+
+	token, err := auth.GetBearerToken(r.Header)
+	if err!=nil{
+		respondWithError(w, 401, "no token found in request header")
+		return
+	}
+
+	userID, err := auth.ValidateJWT(token, cfg.secret)
+	if err!=nil{
+		respondWithError(w, 401, "token could not be validated")
+		return
+	}
+
+	chirpID, err := uuid.Parse(r.PathValue("chirpID"))
+	if err!=nil{
+		log.Printf("chirp ID could not be parsed: %s", err)
+		return
+	}
+
+	associatedUser, err := cfg.dbQueries.GetUserFromChirp(r.Context(), chirpID)
+	if err!= nil{
+		log.Printf("error in finding associated user: %s", err)
+		respondWithError(w, 404, "the chirp is not found")
+		return
+	}
+
+	if userID != associatedUser.ID{
+		respondWithError(w, 403, "the user is not authorized to delete this chirp")
+		return
+	}
+
+	err = cfg.dbQueries.DeleteChirp(r.Context(), chirpID)
+	if err!=nil{
+		log.Printf("chirp could not be deleted: %s", err)
+	}
+
+	respondWithJSON(w, 204, map[string]string{"Success": "the chirp is deleted"})
+
+}
+
 func (cfg *apiConfig) handlerGetChirps (w http.ResponseWriter, r *http.Request){
 	chirpSlice, err := cfg.dbQueries.GetAllChirps(r.Context())
 	if err!=nil{
