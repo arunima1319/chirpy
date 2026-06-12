@@ -59,6 +59,7 @@ func (cfg *apiConfig) handlerUpdateDetails (w http.ResponseWriter, r *http.Reque
 		Email: user.Email,
 		TokenString: jwtToken, 
 		RefreshToken: refreshToken.Token,
+		IsChirpyRed: user.IsChirpyRed,
 	}
 	respondWithJSON(w, 200, userResource)
 

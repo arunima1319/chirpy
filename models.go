@@ -5,6 +5,12 @@ import (
 	"time"
 )
 
+type webhooksReq struct{
+	Event string `json:"event"`
+	Data struct{
+		UserId uuid.UUID `json:"user_id"`
+	} `json:"data"`
+}
 
 type userBody struct{
 	Email string `json:"email"`
@@ -20,6 +26,7 @@ type User struct{
 	HashedPassword string `json:"hashed_password"`
 	TokenString string `json:"token"`
 	RefreshToken string `json:"refresh_token"`
+	IsChirpyRed bool `json:"is_chirpy_red"`
 }
 
 type chirp struct{ 

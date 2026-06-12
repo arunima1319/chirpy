@@ -13,7 +13,7 @@ import (
 
 const getUserFromChirp = `-- name: GetUserFromChirp :one
 
-SELECT users.id, users.created_at, users.updated_at, users.email, users.hashed_password FROM users
+SELECT users.id, users.created_at, users.updated_at, users.email, users.hashed_password, users.is_chirpy_red FROM users
 INNER JOIN chirps  
     ON users.id = chirps.user_id
 WHERE chirps.id = $1
@@ -28,6 +28,7 @@ func (q *Queries) GetUserFromChirp(ctx context.Context, id uuid.UUID) (User, err
 		&i.UpdatedAt,
 		&i.Email,
 		&i.HashedPassword,
+		&i.IsChirpyRed,
 	)
 	return i, err
 }
