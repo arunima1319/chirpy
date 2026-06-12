@@ -4,19 +4,11 @@ import (
 	"net/http"
 	"log"
 	"encoding/json"
-	"time"
 	"github.com/google/uuid"
 	"github.com/arunima1319/chirpy/internal/database"
 	"github.com/arunima1319/chirpy/internal/auth"
 )
 
-type chirp struct{ 
-	ID uuid.UUID `json:"id"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
-	Body string `json:"body"`
-	UserID uuid.UUID `json:"user_id"`
-}
 
 func (cfg *apiConfig) handlerDeleteChirp (w http.ResponseWriter, r *http.Request){
 
