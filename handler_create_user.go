@@ -14,6 +14,7 @@ import (
 type userBody struct{
 	Email string `json:"email"`
 	Password string `json:"password"`
+	//ExpirationTimeSeconds int `json:"expires_in_seconds"`
 }
 
 type User struct{
@@ -22,6 +23,8 @@ type User struct{
 	UpdatedAt time.Time `json:"updated_at"`
 	Email string `json:"email"`
 	HashedPassword string `json:"hashed_password"`
+	TokenString string `json:"token"`
+	RefreshToken string `json:"refresh_token"`
 }
 
 func (cfg *apiConfig) handlerCreateUser (w http.ResponseWriter, r *http.Request){ 

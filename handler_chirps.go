@@ -7,6 +7,7 @@ import (
 	"time"
 	"github.com/google/uuid"
 	"github.com/arunima1319/chirpy/internal/database"
+	"github.com/arunima1319/chirpy/internal/auth"
 )
 
 type chirp struct{ 
@@ -15,7 +16,6 @@ type chirp struct{
 	UpdatedAt time.Time `json:"updated_at"`
 	Body string `json:"body"`
 	UserID uuid.UUID `json:"user_id"`
-
 }
 
 func (cfg *apiConfig) handlerGetChirps (w http.ResponseWriter, r *http.Request){
@@ -83,22 +83,39 @@ func (cfg *apiConfig) handlerChirps (w http.ResponseWriter, r *http.Request){
 	}
 
 	cleanedText := replaceBadWord(chirped.Body)
-	chirped.Body = cleanedText
+	
+
+	token, err := auth.GetBearerToken(r.Header)
+	if err!=nil{
+		log.Printf("error in getting bearer token: %s", err)
+		return
+	}
+	userIDFromJWT, err := auth.ValidateJWT(token, cfg.secret)
+	if err!=nil{
+		respondWithError(w, 401, "JWT could not be validated")
+		return
+	}
 
 	chirpResource, err := cfg.dbQueries.CreateChirp(
 		r.Context(),
 		database.CreateChirpParams{
 			Body: cleanedText,
-			UserID: chirped.UserID, 
+			UserID: userIDFromJWT, 
 		})
 	if err!=nil{
 		log.Printf("Error in storing chirp to database: %s", err)
 		return
 	}
+	
+	chirpedResponse := chirp{
+		ID: chirpResource.ID,
+		CreatedAt: chirpResource.CreatedAt,
+		UpdatedAt: chirpResource.UpdatedAt,
+		UserID: userIDFromJWT,
+		Body: cleanedText,
 
-	chirped.ID = chirpResource.ID
-	chirped.CreatedAt = chirpResource.CreatedAt
-	chirped.UpdatedAt = chirpResource.UpdatedAt
+	}
 
-	respondWithJSON(w, 201, chirped)
+
+	respondWithJSON(w, 201, chirpedResponse)
 }
